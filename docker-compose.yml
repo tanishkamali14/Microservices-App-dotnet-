@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  catalogdb:
+    image: mongo
+
+  basketdb:
+    image: redis:alpine
+
+  discountdb:
+    image: postgres
+  
+  orderdb:
+    image: mcr.microsoft.com/azure-sql-edge:latest
+
+  pgadmin:
+    image: dpage/pgadmin4
+
+  portainer:
+    image: portainer/portainer-ce
+
+  catalog.api:
+    image: ${DOCKER_REGISTRY-}catalogapi
+    build:
+      context: .
+      dockerfile: src/Catalog.API/Dockerfile
+
+  basket.api:
+    image: ${DOCKER_REGISTRY-}basketapi
+    build:
+      context: .
+      dockerfile: src/Basket.API/Dockerfile
+  
+  discount.api:
+    image: ${DOCKER_REGISTRY-}discountapi
+    build:
+      context: .
+      dockerfile: src/Discount.API/Dockerfile
+
+  discount.grpc:
+    image: ${DOCKER_REGISTRY-}discountgrpc
+    build:
+      context: .
+      dockerfile: src/Discount.GRPC/Dockerfile
+
+  ordering.api:
+    image: ${DOCKER_REGISTRY-}orderingapi
+    build:
+      context: .
+      dockerfile: src/Ordering.API/Dockerfile
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+
+  ocelotapi.gateway:
+    image: ${DOCKER_REGISTRY-}ocelotapi.gateway
+    build:
+      context: .
+      dockerfile: src/OcelotApi.Gateway/Dockerfile
+
+  shopping.aggregator:
+    image: ${DOCKER_REGISTRY-}shopping.aggregator
+    build:
+      context: .
+      dockerfile: src/Shopping.Aggregator/Dockerfile
+
+  shopping.webapp:
+    image: ${DOCKER_REGISTRY-}shopping.webapp
+    build:
+      context: .
+      dockerfile: src/Shopping.WebApp/Dockerfile
+
+volumes:
+  mongo_data:
+  portainer_data:
+  postgres_data:
+  pgadmin_data:
