@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <!-- Passwords for local `dotnet run` live in user secrets (see README), not in appsettings.json. -->
+    <UserSecretsId>ed9d06d1-5fbf-4475-b25c-e661ad088fdc</UserSecretsId>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>

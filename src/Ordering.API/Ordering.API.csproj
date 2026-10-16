@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <!-- Passwords for local `dotnet run` live in user secrets (see README), not in appsettings.json. -->
+    <UserSecretsId>631a8922-1bcb-49c1-8230-c8bf8002f372</UserSecretsId>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="MassTransit.RabbitMQ" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />

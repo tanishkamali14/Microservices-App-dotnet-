@@ -31,7 +31,9 @@ public static class DiscountDataExtensions
         var pipeline = new ResiliencePipelineBuilder()
             .AddRetry(new RetryStrategyOptions
             {
-                ShouldHandle = new PredicateBuilder().Handle<NpgsqlException>().Handle<TimeoutException>(),
+                // Only retry errors that can go away on their own (server still starting, connection refused).
+                // A wrong or missing password fails immediately instead of after a minute of retries.
+                ShouldHandle = new PredicateBuilder().Handle<NpgsqlException>(ex => ex.IsTransient).Handle<TimeoutException>(),
                 MaxRetryAttempts = 8,
                 Delay = TimeSpan.FromSeconds(1),
                 MaxDelay = TimeSpan.FromSeconds(15),

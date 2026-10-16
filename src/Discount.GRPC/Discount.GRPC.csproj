@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <!-- Passwords for local `dotnet run` live in user secrets (see README), not in appsettings.json. -->
+    <UserSecretsId>e1f9e380-ef2c-4e4b-adbd-e26ecf5433fe</UserSecretsId>
+  </PropertyGroup>
+
   <ItemGroup>
     <Protobuf Include="Protos\discount.proto" GrpcServices="Server" />
   </ItemGroup>

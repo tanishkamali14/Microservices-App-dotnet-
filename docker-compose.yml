@@ -42,9 +42,6 @@ services:
   pgadmin:
     image: dpage/pgadmin4:9
 
-  portainer:
-    image: portainer/portainer-ce
-
   catalog.api:
     image: ${DOCKER_REGISTRY-}catalogapi
     build:
@@ -108,6 +105,5 @@ services:
 
 volumes:
   mongo_data:
-  portainer_data:
   postgres_data:
   pgadmin_data:

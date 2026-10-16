@@ -16,8 +16,8 @@ services:
   discountdb:
     container_name: discountdb
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin1234
+      - POSTGRES_USER=${POSTGRES_USER:?copy .env.example to .env}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?copy .env.example to .env}
       - POSTGRES_DB=DiscountDb
     restart: always
     ports:
@@ -28,7 +28,7 @@ services:
   orderdb:
     container_name: orderdb
     environment:
-      - MSSQL_SA_PASSWORD=StrongPassword1234!
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:?copy .env.example to .env}
       - ACCEPT_EULA=Y
     restart: always
     ports:
@@ -38,22 +38,12 @@ services:
     container_name: pgadmin
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@aspnetrun.com
-      - PGADMIN_DEFAULT_PASSWORD=admin1234
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:?copy .env.example to .env}
     restart: always
     ports:
       - "5050:80"
     volumes:
       - pgadmin_data:/root/.pgadmin
-
-  portainer:
-    container_name: portainer
-    restart: always
-    ports:
-      - "8080:8000"
-      - "9000:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
 
   catalog.api:
     container_name: catalog.api
@@ -74,7 +64,7 @@ services:
       - "CacheSettings:ConnectionString=basketdb:6379"
       - "GrpcSettings:DiscountUrl=http://discount.grpc:8080"
       - "ApiSettings:CatalogUrl=http://catalog.api:8080"
-      - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672"
+      - "EventBusSettings:HostAddress=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672"
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
       basketdb:
@@ -92,7 +82,7 @@ services:
     container_name: discount.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "DatabaseSettings:ConnectionString=Server=discountdb;Port=5432;Database=DiscountDb;User Id=admin;Password=admin1234;"
+      - "DatabaseSettings:ConnectionString=Server=discountdb;Port=5432;Database=DiscountDb;User Id=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};"
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
       discountdb:
@@ -104,7 +94,7 @@ services:
     container_name: discount.grpc
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "DatabaseSettings:ConnectionString=Server=discountdb;Port=5432;Database=DiscountDb;User Id=admin;Password=admin1234;"
+      - "DatabaseSettings:ConnectionString=Server=discountdb;Port=5432;Database=DiscountDb;User Id=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};"
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
       discountdb:
@@ -118,8 +108,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       # TrustServerCertificate: since EF Core 7, SQL Server connections are encrypted by default and
       # the development container only has a self-signed certificate.
-      - "ConnectionStrings:OrderingConnectionString=Server=orderdb;Database=OrderDb;User Id=sa;Password=StrongPassword1234!;TrustServerCertificate=True"
-      - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672"
+      - "ConnectionStrings:OrderingConnectionString=Server=orderdb;Database=OrderDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      - "EventBusSettings:HostAddress=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672"
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
       orderdb:
@@ -131,6 +121,9 @@ services:
 
   rabbitmq:
     container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:?copy .env.example to .env}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:?copy .env.example to .env}
     restart: always
     ports:
       - "5672:5672"

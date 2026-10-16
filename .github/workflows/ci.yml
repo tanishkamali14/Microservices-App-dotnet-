@@ -56,5 +56,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Use the example environment file
+        run: cp .env.example .env
+
       - name: Build every service image
         run: docker compose build
