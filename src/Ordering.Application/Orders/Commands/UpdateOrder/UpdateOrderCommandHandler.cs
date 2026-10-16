@@ -51,6 +51,6 @@ public class UpdateOrderCommandHandler : IRequestHandler<UpdateOrderCommand>
 
         request.ApplyTo(orderToUpdate);
         await orderRepository.UpdateAsync(orderToUpdate);
-        logger.LogError("Order {OrderId} is successfully updated.", orderToUpdate.Id);
+        logger.LogInformation("Order {OrderId} is successfully updated.", orderToUpdate.Id);
     }
 }

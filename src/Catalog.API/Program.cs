@@ -1,5 +1,6 @@
 using Catalog.API.Data;
 using Catalog.API.Repositories;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,8 +10,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<ICatalogContext, CatalogContext>();
+builder.Services.AddSingleton<IMongoClient>(_ =>
+    new MongoClient(builder.Configuration["DatabaseSettings:ConnectionString"]));
+builder.Services.AddSingleton<ICatalogContext, CatalogContext>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddHostedService<CatalogSeeder>();
 
 var app = builder.Build();
 

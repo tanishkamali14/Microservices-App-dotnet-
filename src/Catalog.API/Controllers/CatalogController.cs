@@ -11,7 +11,7 @@ public class CatalogController : ControllerBase
 {
     private readonly ILogger<CatalogController> logger;
     private readonly IProductRepository repository;
-    
+
     public CatalogController(ILogger<CatalogController> logger, IProductRepository repository)
     {
         this.logger = logger;
@@ -34,7 +34,7 @@ public class CatalogController : ControllerBase
         var entity = await repository.GetById(id);
         if (entity == null)
         {
-            logger.LogError($"Product with id: {id}, not found.");
+            logger.LogWarning("Product with id {ProductId} not found.", id);
             return NotFound();
         }
         return Ok(entity);
@@ -50,7 +50,7 @@ public class CatalogController : ControllerBase
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(Product), (int) HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(Product), (int) HttpStatusCode.Created)]
     public async Task<ActionResult<Product>> Add([FromBody] Product product)
     {
         await repository.Add(product);
@@ -59,15 +59,19 @@ public class CatalogController : ControllerBase
 
     [HttpPut]
     [ProducesResponseType((int) HttpStatusCode.OK)]
+    [ProducesResponseType((int) HttpStatusCode.NotFound)]
     public async Task<IActionResult> Update([FromBody] Product product)
     {
-        return Ok(await repository.Update(product));
+        var updated = await repository.Update(product);
+        return updated ? Ok(true) : NotFound();
     }
 
     [HttpDelete("{id:length(24)}", Name = "DeleteProduct")]
-    [ProducesResponseType(typeof(Product), (int) HttpStatusCode.OK)]
+    [ProducesResponseType((int) HttpStatusCode.OK)]
+    [ProducesResponseType((int) HttpStatusCode.NotFound)]
     public async Task<IActionResult> DeleteById(string id)
     {
-        return Ok(await repository.Delete(id));
+        var deleted = await repository.Delete(id);
+        return deleted ? Ok(true) : NotFound();
     }
 }

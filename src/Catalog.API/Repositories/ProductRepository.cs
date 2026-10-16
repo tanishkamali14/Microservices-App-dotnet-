@@ -6,54 +6,55 @@ namespace Catalog.API.Repositories;
 
 public class ProductRepository : IProductRepository
 {
-    private readonly ICatalogContext dbDontext;
+    private readonly ICatalogContext dbContext;
 
-    public ProductRepository(ICatalogContext dbDontext)
+    public ProductRepository(ICatalogContext dbContext)
     {
-        this.dbDontext = dbDontext ?? throw new ArgumentNullException(nameof(dbDontext));
+        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public async Task Add(Product entity)
     {
-        await this.dbDontext.Products.InsertOneAsync(entity);
+        await dbContext.Products.InsertOneAsync(entity);
     }
 
     public async Task<bool> Delete(string id)
     {
         FilterDefinition<Product> filter = Builders<Product>.Filter.Eq(e => e.Id, id);
 
-        DeleteResult deleteResult = await this.dbDontext.Products.DeleteOneAsync(filter);
-        
+        DeleteResult deleteResult = await dbContext.Products.DeleteOneAsync(filter);
+
         return deleteResult.IsAcknowledged && deleteResult.DeletedCount > 0;
     }
 
     public async Task<IEnumerable<Product>> GetAll()
     {
-        return await this.dbDontext.Products.Find(e => true).ToListAsync();
+        return await dbContext.Products.Find(e => true).ToListAsync();
     }
 
     public async Task<IEnumerable<Product>> GetByCategory(string categoryName)
     {
         FilterDefinition<Product> filter = Builders<Product>.Filter.Eq(e => e.Category, categoryName);
-        return await this.dbDontext.Products.Find(filter).ToListAsync();
+        return await dbContext.Products.Find(filter).ToListAsync();
     }
 
-    public async Task<Product> GetById(string id)
+    public async Task<Product?> GetById(string id)
     {
-        return await this.dbDontext.Products.Find(e => e.Id == id).FirstOrDefaultAsync();
+        return await dbContext.Products.Find(e => e.Id == id).FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<Product>> GetByName(string name)
     {
         FilterDefinition<Product> filter = Builders<Product>.Filter.Eq(e => e.Name, name);
-        return await this.dbDontext.Products.Find(filter).ToListAsync();
+        return await dbContext.Products.Find(filter).ToListAsync();
     }
 
     public async Task<bool> Update(Product entity)
     {
-        var updateResult = await this.dbDontext.Products
+        var updateResult = await dbContext.Products
             .ReplaceOneAsync(filter: e => e.Id == entity.Id, replacement: entity);
-        
-        return updateResult.IsAcknowledged && updateResult.ModifiedCount > 0;
+
+        // MatchedCount, not ModifiedCount: saving an unchanged product is still a successful update.
+        return updateResult.IsAcknowledged && updateResult.MatchedCount > 0;
     }
 }

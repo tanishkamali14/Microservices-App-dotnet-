@@ -51,9 +51,9 @@ public class CheckoutOrderCommandHandler : IRequestHandler<CheckoutOrderCommand,
 
         var email = new Email()
         {
-            To = "test@gmail.com",
-            Subject = $"Your Order",
-            Body = $"Order was created."
+            To = newOrder.EmailAddress,
+            Subject = $"Your order #{newOrder.Id}",
+            Body = $"Thanks {newOrder.FirstName}, we received your order #{newOrder.Id} for {newOrder.TotalPrice:C}."
         };
 
         try

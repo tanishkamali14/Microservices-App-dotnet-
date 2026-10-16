@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ordering.Domain.Entities;
 
@@ -7,7 +8,7 @@ public class OrderContextSeed
 {
     public static async Task SeedAsync(OrderContext orderContext, ILogger<OrderContextSeed> logger)
     {
-        if (!orderContext.Orders.Any())
+        if (!await orderContext.Orders.AnyAsync())
         {
             orderContext.Orders.AddRange(GetPreconfiguredOrders());
             await orderContext.SaveChangesAsync();

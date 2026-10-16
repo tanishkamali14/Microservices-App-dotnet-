@@ -3,15 +3,20 @@ using MongoDB.Driver;
 
 namespace Catalog.API.Data;
 
-public class CatalogContextSeed
+public static class CatalogContextSeed
 {
-    public static void SeedData(IMongoCollection<Product> productCollection)
+    /// <summary>Inserts the demo products when the collection is empty.</summary>
+    /// <returns><c>true</c> when products were inserted.</returns>
+    public static async Task<bool> SeedAsync(IMongoCollection<Product> productCollection, CancellationToken cancellationToken = default)
     {
-        bool existProduct = productCollection.Find(e => true).Any();
-        if (!existProduct)
+        var count = await productCollection.CountDocumentsAsync(FilterDefinition<Product>.Empty, cancellationToken: cancellationToken);
+        if (count > 0)
         {
-            productCollection.InsertManyAsync(GetPreconfiguredProducts());
+            return false;
         }
+
+        await productCollection.InsertManyAsync(GetPreconfiguredProducts(), cancellationToken: cancellationToken);
+        return true;
     }
 
     private static IEnumerable<Product> GetPreconfiguredProducts()

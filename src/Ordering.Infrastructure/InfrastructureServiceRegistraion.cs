@@ -21,7 +21,8 @@ public static class InfrastructureServiceRegistration
         services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>));
         services.AddScoped<IOrderRepository, OrderRepository>();
 
-        services.Configure<EmailSettings>(c => configuration.GetSection("EmailSettings"));
+        // Bind the section; the previous lambda evaluated GetSection and discarded it, so settings were never loaded.
+        services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
         services.AddTransient<IEmailService, EmailService>();
 
         return services;

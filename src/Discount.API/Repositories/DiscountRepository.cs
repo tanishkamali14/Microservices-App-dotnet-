@@ -40,7 +40,7 @@ public class DiscountRepository : IDiscountRepository
         {
             return new Coupon 
             {
-                ProductName = "No dicount",
+                ProductName = "No discount",
                 Amount = 0,
                 Description = "No discount description"
             };

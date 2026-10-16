@@ -1,4 +1,3 @@
-using System.Net;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ordering.Application.Common.Contracts.Notifications;
@@ -10,8 +9,8 @@ namespace Ordering.Infrastructure.Notifications;
 
 public class EmailService : IEmailService
 {
-    public EmailSettings emailSettings { get; }
-    public ILogger<EmailService> logger { get; }
+    private readonly EmailSettings emailSettings;
+    private readonly ILogger<EmailService> logger;
 
     public EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger)
     {
@@ -21,11 +20,13 @@ public class EmailService : IEmailService
 
     public async Task<bool> SendEmail(Email email)
     {
-        var client = new SendGridClient(emailSettings.ApiKey);
+        if (string.IsNullOrWhiteSpace(emailSettings.ApiKey))
+        {
+            logger.LogInformation("Email sending is disabled (no SendGrid API key configured). Skipped '{Subject}'.", email.Subject);
+            return false;
+        }
 
-        var subject = email.Subject;
-        var to = new EmailAddress(email.To);
-        var emailBody = email.Body;
+        var client = new SendGridClient(emailSettings.ApiKey);
 
         var from = new EmailAddress
         {
@@ -33,18 +34,16 @@ public class EmailService : IEmailService
             Name = emailSettings.FromName
         };
 
-        var sendGridMessage = MailHelper.CreateSingleEmail(from, to, subject, emailBody, emailBody);
+        var sendGridMessage = MailHelper.CreateSingleEmail(from, new EmailAddress(email.To), email.Subject, email.Body, email.Body);
         var response = await client.SendEmailAsync(sendGridMessage);
 
-        logger.LogInformation("Email sent.");
-
-        if (response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.OK)
+        if (response.IsSuccessStatusCode)
         {
+            logger.LogInformation("Email '{Subject}' sent.", email.Subject);
             return true;
         }
 
-        logger.LogInformation("Email sending failed.");
-
+        logger.LogWarning("Email '{Subject}' failed with status {StatusCode}.", email.Subject, response.StatusCode);
         return false;
     }
 }
