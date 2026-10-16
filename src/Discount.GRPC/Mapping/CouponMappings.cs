@@ -1,4 +1,4 @@
-using Discount.GRPC.Entities;
+using Discount.Data.Entities;
 using Discount.GRPC.Protos;
 
 namespace Discount.GRPC.Mapping;
@@ -9,7 +9,7 @@ public static class CouponMappings
     {
         Id = coupon.Id,
         ProductName = coupon.ProductName,
-        Description = coupon.Description,
+        Description = coupon.Description ?? "",
         Amount = coupon.Amount
     };
 

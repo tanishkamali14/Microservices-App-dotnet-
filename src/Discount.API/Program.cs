@@ -1,5 +1,4 @@
-using Discount.API.Extensions;
-using Discount.API.Repositories;
+using Discount.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,11 +8,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
+builder.Services.AddDiscountData(builder.Configuration["DatabaseSettings:ConnectionString"]!);
 
 var app = builder.Build();
 
-app.MigrateDatabase<Program>();
+await app.Services.MigrateDiscountDatabaseAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -26,4 +25,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

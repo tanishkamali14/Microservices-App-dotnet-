@@ -5,9 +5,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapper" />
     <PackageReference Include="Grpc.AspNetCore" />
-    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Discount.Data\Discount.Data.csproj" />
   </ItemGroup>
 
 </Project>

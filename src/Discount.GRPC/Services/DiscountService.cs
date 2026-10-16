@@ -1,6 +1,7 @@
+using Discount.Data.Entities;
+using Discount.Data.Repositories;
 using Discount.GRPC.Mapping;
 using Discount.GRPC.Protos;
-using Discount.GRPC.Repositories;
 using Grpc.Core;
 
 namespace Discount.GRPC.Services;
@@ -18,12 +19,8 @@ public class DiscountService : DiscountProtoService.DiscountProtoServiceBase
 
     public override async Task<CouponModel> GetDiscount(GetDiscountRequest request, ServerCallContext context)
     {
-        var coupon = await repository.GetDiscount(request.ProductName);
-
-        if (coupon == null)
-        {
-            throw new RpcException(new Status(StatusCode.NotFound, $"Discount with ProductName={request.ProductName} is not found."));
-        }
+        // A product without a coupon simply has no discount, so Basket gets an amount of 0.
+        var coupon = await repository.GetDiscount(request.ProductName) ?? Coupon.NoDiscount(request.ProductName);
 
         return coupon.ToModel();
     }
@@ -31,30 +28,33 @@ public class DiscountService : DiscountProtoService.DiscountProtoServiceBase
     public override async Task<CouponModel> CreateDiscount(CreateDiscountRequest request, ServerCallContext context)
     {
         var coupon = request.Coupon.ToEntity();
-        await repository.CreateDiscount(coupon);
-        logger.LogInformation("Discount is successfully created. ProductName : {ProductName}", coupon.ProductName);
+        if (!await repository.CreateDiscount(coupon))
+        {
+            throw new RpcException(new Status(StatusCode.AlreadyExists, $"A discount for '{coupon.ProductName}' already exists."));
+        }
 
+        logger.LogInformation("Discount is successfully created. ProductName : {ProductName}", coupon.ProductName);
         return coupon.ToModel();
     }
 
     public override async Task<CouponModel> UpdateDiscount(UpdateDiscountRequest request, ServerCallContext context)
     {
         var coupon = request.Coupon.ToEntity();
+        if (!await repository.UpdateDiscount(coupon))
+        {
+            throw new RpcException(new Status(StatusCode.NotFound, $"Discount with Id={coupon.Id} is not found."));
+        }
 
-        await repository.UpdateDiscount(coupon);
         logger.LogInformation("Discount is successfully updated. ProductName : {ProductName}", coupon.ProductName);
-
         return coupon.ToModel();
     }
 
     public override async Task<DeleteDiscountResponse> DeleteDiscount(DeleteDiscountRequest request, ServerCallContext context)
     {
         var deleted = await repository.DeleteDiscount(request.ProductName);
-        var response = new DeleteDiscountResponse
+        return new DeleteDiscountResponse
         {
             Success = deleted
         };
-
-        return response;
     }
 }

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <PackageReference Include="MassTransit.RabbitMQ" />
+    <PackageReference Include="Polly.Core" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

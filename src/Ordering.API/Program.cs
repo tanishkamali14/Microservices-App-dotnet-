@@ -35,12 +35,10 @@ builder.Services.AddMassTransit(config =>
 
 var app = builder.Build();
 
-app.MigrateDatabase<OrderContext>((context, services) =>
+await app.Services.MigrateDatabaseAsync<OrderContext>(async (context, services) =>
 {
     var logger = services.GetRequiredService<ILogger<OrderContextSeed>>();
-    OrderContextSeed
-        .SeedAsync(context, logger)
-        .Wait();
+    await OrderContextSeed.SeedAsync(context, logger);
 });
 
 // Configure the HTTP request pipeline.
@@ -56,4 +54,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
