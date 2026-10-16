@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Http.Resilience;
 using Shopping.WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,15 +6,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient<ICatalogService, CatalogService>(opt =>
 {
     opt.BaseAddress = new Uri(builder.Configuration["ApiSettings:GatewayAddress"]!);
-});
+}).AddStandardResilienceHandler();
 builder.Services.AddHttpClient<IBasketService, BasketService>(opt =>
 {
     opt.BaseAddress = new Uri(builder.Configuration["ApiSettings:GatewayAddress"]!);
+}).AddStandardResilienceHandler(options =>
+{
+    // Never blindly replay POSTs such as checkout; reads are still retried.
+    options.Retry.DisableForUnsafeHttpMethods();
 });
 builder.Services.AddHttpClient<IOrderService, OrderService>(opt =>
 {
     opt.BaseAddress = new Uri(builder.Configuration["ApiSettings:GatewayAddress"]!);
-});
+}).AddStandardResilienceHandler();
 
 builder.Services.AddScoped<ICurrentUser, ConfiguredCurrentUser>();
 

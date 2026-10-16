@@ -4,15 +4,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient<ICatalogService, CatalogService>(e =>
     e.BaseAddress = new Uri(builder.Configuration["ApiSettings:CatalogUrl"]!)
-);
+).AddStandardResilienceHandler();
 
 builder.Services.AddHttpClient<IBasketService, BasketService>(e =>
     e.BaseAddress = new Uri(builder.Configuration["ApiSettings:BasketUrl"]!)
-);
+).AddStandardResilienceHandler();
 
 builder.Services.AddHttpClient<IOrderService, OrderService>(e =>
     e.BaseAddress = new Uri(builder.Configuration["ApiSettings:OrderingUrl"]!)
-);
+).AddStandardResilienceHandler();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
