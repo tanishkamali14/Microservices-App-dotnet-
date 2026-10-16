@@ -19,6 +19,10 @@ public class CheckOutModel : PageModel
     [BindProperty]
     public CheckoutForm Order { get; set; } = new();
 
+    /// <summary>Idempotency key for this checkout attempt; resubmitting the form reuses it.</summary>
+    [BindProperty]
+    public Guid CheckoutId { get; set; }
+
     public BasketModel Cart { get; set; } = new BasketModel();
 
     public string UserName => currentUser.UserName;
@@ -31,6 +35,7 @@ public class CheckOutModel : PageModel
             return RedirectToPage("Cart");
         }
 
+        CheckoutId = Guid.NewGuid();
         return Page();
     }
 
@@ -49,6 +54,7 @@ public class CheckOutModel : PageModel
 
         var checkout = new BasketCheckoutModel
         {
+            CheckoutId = CheckoutId == Guid.Empty ? Guid.NewGuid() : CheckoutId,
             Username = currentUser.UserName,
             TotalPrice = Cart.TotalPrice,
             FirstName = Order.FirstName,

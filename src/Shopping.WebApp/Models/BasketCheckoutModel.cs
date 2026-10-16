@@ -2,6 +2,7 @@ namespace Shopping.WebApp.Models;
 
 public class BasketCheckoutModel
 {
+    public Guid CheckoutId { get; set; }
     public string Username { get; set; } = "";
     public decimal TotalPrice { get; set; }
 

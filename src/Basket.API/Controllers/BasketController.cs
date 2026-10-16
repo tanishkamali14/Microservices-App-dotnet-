@@ -57,20 +57,24 @@ public class BasketController : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Checkout([FromBody] BasketCheckout basketCheckout)
+    public async Task<IActionResult> Checkout([FromBody] BasketCheckout basketCheckout, CancellationToken cancellationToken)
     {
         var basket = await repository.GetBasket(basketCheckout.Username);
-        if (basket == null)
+        if (basket == null || basket.Items.Count == 0)
         {
-            return BadRequest();
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "Basket is empty");
         }
 
+        var checkoutId = basketCheckout.CheckoutId ?? Guid.NewGuid();
         var eventMessage = basketCheckout.ToCheckoutEvent(basket.TotalPrice);
-        await publishEndpoint.Publish(eventMessage);
+
+        // Publish first, then delete: if the delete fails the shopper can retry with the same
+        // CheckoutId, and Ordering's inbox drops the duplicate message instead of creating a second order.
+        await publishEndpoint.Publish(eventMessage, context => context.MessageId = checkoutId, cancellationToken);
 
         await repository.DeleteBasket(basket.Username);
 
-        logger.LogInformation("Checkout accepted for {Username}", basket.Username);
+        logger.LogInformation("Checkout {CheckoutId} accepted for {Username}", checkoutId, basket.Username);
 
         return Accepted();
     }
