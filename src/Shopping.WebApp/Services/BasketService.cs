@@ -23,8 +23,33 @@ public class BasketService : IBasketService
 
     public async Task<BasketModel> GetBasket(string userName)
     {
-        var response = await httpClient.GetAsync($"/Basket/{userName}");
+        var response = await httpClient.GetAsync($"/Basket/{Uri.EscapeDataString(userName)}");
         return await response.ReadContentAs<BasketModel>();
+    }
+
+    public async Task<BasketModel> AddItem(string userName, CatalogModel product, int quantity, string color)
+    {
+        var basket = await GetBasket(userName);
+        basket.UserName = userName;
+
+        var existing = basket.Items.FirstOrDefault(i => i.ProductId == product.Id && i.Color == color);
+        if (existing is not null)
+        {
+            existing.Quantity += quantity;
+        }
+        else
+        {
+            basket.Items.Add(new BasketItemModel
+            {
+                ProductId = product.Id,
+                ProductName = product.Name,
+                Price = product.Price,
+                Quantity = quantity,
+                Color = color
+            });
+        }
+
+        return await UpdateBasket(basket);
     }
 
     public async Task<BasketModel> UpdateBasket(BasketModel model)

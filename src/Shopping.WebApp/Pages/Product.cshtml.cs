@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Shopping.WebApp.Models;
 using Shopping.WebApp.Services;
@@ -9,34 +9,29 @@ public class ProductModel : PageModel
 {
     private readonly ICatalogService catalogService;
     private readonly IBasketService basketService;
+    private readonly ICurrentUser currentUser;
 
-    public ProductModel(ICatalogService catalogService, IBasketService basketService)
+    public ProductModel(ICatalogService catalogService, IBasketService basketService, ICurrentUser currentUser)
     {
         this.catalogService = catalogService;
         this.basketService = basketService;
+        this.currentUser = currentUser;
     }
 
     public IEnumerable<string> CategoryList { get; set; } = new List<string>();
     public IEnumerable<CatalogModel> ProductList { get; set; } = new List<CatalogModel>();
 
-
     [BindProperty(SupportsGet = true)]
-    public string SelectedCategory { get; set; }
+    public string? SelectedCategory { get; set; }
 
-    public async Task<IActionResult> OnGetAsync(string categoryName)
+    public async Task<IActionResult> OnGetAsync()
     {
-        var productList = await catalogService.GetCatalog();
-        CategoryList = productList.Select(e => e.Category).Distinct();
+        var productList = (await catalogService.GetCatalog()).ToList();
+        CategoryList = productList.Select(e => e.Category).Distinct().OrderBy(c => c);
 
-        if (string.IsNullOrWhiteSpace(categoryName))
-        {
-            ProductList = ProductList.Where(e => e.Category == categoryName);
-            SelectedCategory = categoryName;
-        }
-        else
-        {
-            ProductList = productList;
-        }
+        ProductList = string.IsNullOrWhiteSpace(SelectedCategory)
+            ? productList
+            : productList.Where(e => e.Category == SelectedCategory).ToList();
 
         return Page();
     }
@@ -44,20 +39,12 @@ public class ProductModel : PageModel
     public async Task<IActionResult> OnPostAddToCartAsync(string productId)
     {
         var product = await catalogService.GetCatalog(productId);
-
-        var userName = "123";
-        var basket = await basketService.GetBasket(userName);
-
-        basket.Items.Add(new BasketItemModel
+        if (product is null)
         {
-            ProductId = productId,
-            ProductName = product.Name,
-            Price = product.Price,
-            Quantity = 1,
-            Color = "Black"
-        });
+            return NotFound();
+        }
 
-        var basketUpdated = await basketService.UpdateBasket(basket);
+        await basketService.AddItem(currentUser.UserName, product, quantity: 1, color: "Black");
         return RedirectToPage("Cart");
     }
 }

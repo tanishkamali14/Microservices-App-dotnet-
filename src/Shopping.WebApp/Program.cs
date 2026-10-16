@@ -15,6 +15,8 @@ builder.Services.AddHttpClient<IOrderService, OrderService>(opt =>
     opt.BaseAddress = new Uri(builder.Configuration["ApiSettings:GatewayAddress"]!);
 });
 
+builder.Services.AddScoped<ICurrentUser, ConfiguredCurrentUser>();
+
 builder.Services.AddRazorPages();
 
 var app = builder.Build();

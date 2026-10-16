@@ -47,7 +47,7 @@
         ]
       },
       {
-        "DownstreamPathTemplate": "/api/v1/Catalog/GetProductByCategory/{category}",
+        "DownstreamPathTemplate": "/api/v1/Catalog/GetByCategory/{category}",
         "DownstreamScheme": "http",
         "DownstreamHostAndPorts": [
           {
@@ -55,7 +55,8 @@
             "Port": 8080
           }
         ],
-        "UpstreamPathTemplate": "/api/v1/Catalog/GetProductByCategory/{category}",
+        "UpstreamPathTemplate": "/Catalog/GetProductByCategory/{category}",
+        "Priority": 2,
         "UpstreamHttpMethod": [
           "GET"
         ]
@@ -147,7 +148,7 @@
         "DownstreamScheme": "http",
         "DownstreamHostAndPorts": [
           {
-            "Host": "order.api",
+            "Host": "ordering.api",
             "Port": 8080
           }
         ],

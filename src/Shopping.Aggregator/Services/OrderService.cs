@@ -1,6 +1,7 @@
 using Shopping.Aggregator.Extensions;
 using Shopping.Aggregator.Models;
-using Shopping.Aggregator.Services;
+
+namespace Shopping.Aggregator.Services;
 
 public class OrderService : IOrderService
 {

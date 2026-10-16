@@ -32,7 +32,10 @@
             </div>
         </div>
 
-        <partial name="_TopProductPartial" model="Model.ProductList.FirstOrDefault()" />       
+        @if (Model.ProductList.Any())
+        {
+            <partial name="_TopProductPartial" model="Model.ProductList.First()" />
+        }
 
     </div>
 </div>

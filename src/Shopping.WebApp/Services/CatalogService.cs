@@ -1,3 +1,4 @@
+using System.Net;
 using Shopping.WebApp.Extensions;
 using Shopping.WebApp.Models;
 
@@ -26,15 +27,20 @@ public class CatalogService : ICatalogService
         }
     }
 
-    public async Task<CatalogModel> GetCatalog(string id)
+    public async Task<CatalogModel?> GetCatalog(string id)
     {
-        var response = await httpClient.GetAsync($"/Catalog/{id}");
+        var response = await httpClient.GetAsync($"/Catalog/{Uri.EscapeDataString(id)}");
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
         return await response.ReadContentAs<CatalogModel>();
     }
 
     public async Task<IEnumerable<CatalogModel>> GetCatalogByCategory(string category)
     {
-        var response = await httpClient.GetAsync($"/Catalog/GetProductByCategory/{category}");
+        var response = await httpClient.GetAsync($"/Catalog/GetProductByCategory/{Uri.EscapeDataString(category)}");
         return await response.ReadContentAs<List<CatalogModel>>();
     }
 

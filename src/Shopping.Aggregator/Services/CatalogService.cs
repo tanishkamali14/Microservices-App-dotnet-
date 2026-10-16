@@ -20,7 +20,7 @@ public class CatalogService : ICatalogService
 
     public async Task<IEnumerable<CatalogModel>> GetCatalogByCategory(string category)
     {
-        var response = await httpClient.GetAsync($"/api/v1/Catalog/GetProductByCategory/{category}");
+        var response = await httpClient.GetAsync($"/api/v1/Catalog/GetByCategory/{Uri.EscapeDataString(category)}");
         return await response.ReadContentAs<List<CatalogModel>>();
     }
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Shopping.WebApp.Models;
 using Shopping.WebApp.Services;
@@ -9,11 +9,13 @@ public class IndexModel : PageModel
 {
     private readonly ICatalogService catalogService;
     private readonly IBasketService basketService;
+    private readonly ICurrentUser currentUser;
 
-    public IndexModel(ICatalogService catalogService, IBasketService basketService)
+    public IndexModel(ICatalogService catalogService, IBasketService basketService, ICurrentUser currentUser)
     {
         this.catalogService = catalogService;
         this.basketService = basketService;
+        this.currentUser = currentUser;
     }
 
     public IEnumerable<CatalogModel> ProductList { get; set; } = new List<CatalogModel>();
@@ -27,20 +29,12 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostAddToCartAsync(string productId)
     {
         var product = await catalogService.GetCatalog(productId);
-
-        var userName = "123";
-        var basket = await basketService.GetBasket(userName);
-
-        basket.Items.Add(new BasketItemModel
+        if (product is null)
         {
-            ProductId = productId,
-            ProductName = product.Name,
-            Price = product.Price,
-            Quantity = 1,
-            Color = "Black"
-        });
+            return NotFound();
+        }
 
-        var basketUpdated = await basketService.UpdateBasket(basket);
+        await basketService.AddItem(currentUser.UserName, product, quantity: 1, color: "Black");
         return RedirectToPage("Cart");
     }
 }

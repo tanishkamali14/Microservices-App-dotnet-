@@ -1,19 +1,10 @@
-﻿{
+{
   "profiles": {
-    "Default": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "https://localhost:7010",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
     "Local": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "https://localhost:5010",
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:8010",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Local"
       }

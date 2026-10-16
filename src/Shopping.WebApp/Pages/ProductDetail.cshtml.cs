@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Shopping.WebApp.Models;
 using Shopping.WebApp.Services;
@@ -9,53 +9,52 @@ public class ProductDetailModel : PageModel
 {
     private readonly ICatalogService catalogService;
     private readonly IBasketService basketService;
+    private readonly ICurrentUser currentUser;
 
-    public ProductDetailModel(ICatalogService catalogService, IBasketService basketService)
+    public ProductDetailModel(ICatalogService catalogService, IBasketService basketService, ICurrentUser currentUser)
     {
         this.catalogService = catalogService;
         this.basketService = basketService;
+        this.currentUser = currentUser;
     }
 
-    public CatalogModel Product { get; set; }
+    public CatalogModel Product { get; set; } = new();
 
     [BindProperty]
-    public string Color { get; set; }
+    public string Color { get; set; } = "Black";
 
     [BindProperty]
-    public int Quantity { get; set; }
+    public int Quantity { get; set; } = 1;
 
-    public async Task<IActionResult> OnGetAsync(string productId)
+    public async Task<IActionResult> OnGetAsync(string? productId)
     {
         if (productId == null)
         {
             return NotFound();
         }
 
-        Product = await catalogService.GetCatalog(productId);
-        if (Product == null)
+        var product = await catalogService.GetCatalog(productId);
+        if (product == null)
         {
             return NotFound();
         }
+
+        Product = product;
         return Page();
     }
 
     public async Task<IActionResult> OnPostAddToCartAsync(string productId)
     {
         var product = await catalogService.GetCatalog(productId);
-
-        var userName = "123";
-        var basket = await basketService.GetBasket(userName);
-
-        basket.Items.Add(new BasketItemModel
+        if (product is null)
         {
-            ProductId = productId,
-            ProductName = product.Name,
-            Price = product.Price,
-            Quantity = Quantity,
-            Color = Color
-        });
+            return NotFound();
+        }
 
-        var basketUpdated = await basketService.UpdateBasket(basket);
+        var quantity = Math.Clamp(Quantity, 1, 100);
+        var color = string.IsNullOrWhiteSpace(Color) ? "Black" : Color;
+
+        await basketService.AddItem(currentUser.UserName, product, quantity, color);
         return RedirectToPage("Cart");
     }
 }

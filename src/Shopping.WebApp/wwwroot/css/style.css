@@ -58,3 +58,8 @@ footer {
 footer a {
     color: #f8f9fa!important
 }
+
+/* Hide the validation summary until there is something to show. */
+.validation-summary-valid {
+    display: none;
+}

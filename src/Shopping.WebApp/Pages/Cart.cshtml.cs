@@ -1,38 +1,40 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Shopping.WebApp.Models;
 using Shopping.WebApp.Services;
 
-namespace Shopping.WebApp;
+namespace Shopping.WebApp.Pages;
 
 public class CartModel : PageModel
 {
-    private readonly IBasketService _basketService;
+    private readonly IBasketService basketService;
+    private readonly ICurrentUser currentUser;
 
-    public CartModel(IBasketService basketService)
+    public CartModel(IBasketService basketService, ICurrentUser currentUser)
     {
-        _basketService = basketService ?? throw new ArgumentNullException(nameof(basketService));
+        this.basketService = basketService ?? throw new ArgumentNullException(nameof(basketService));
+        this.currentUser = currentUser;
     }
 
     public BasketModel Cart { get; set; } = new BasketModel();
 
     public async Task<IActionResult> OnGetAsync()
     {
-        var userName = "swn";
-        Cart = await _basketService.GetBasket(userName);
+        Cart = await basketService.GetBasket(currentUser.UserName);
 
         return Page();
     }
 
-    public async Task<IActionResult> OnPostRemoveToCartAsync(string productId)
+    public async Task<IActionResult> OnPostRemoveFromCartAsync(string productId)
     {
-        var userName = "swn";
-        var basket = await _basketService.GetBasket(userName);
+        var basket = await basketService.GetBasket(currentUser.UserName);
 
-        var item = basket.Items.Single(x => x.ProductId == productId);
-        basket.Items.Remove(item);
-
-        var basketUpdated = await _basketService.UpdateBasket(basket);
+        var item = basket.Items.FirstOrDefault(x => x.ProductId == productId);
+        if (item is not null)
+        {
+            basket.Items.Remove(item);
+            await basketService.UpdateBasket(basket);
+        }
 
         return RedirectToPage();
     }

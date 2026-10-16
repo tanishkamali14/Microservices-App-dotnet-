@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Shopping.Aggregator.Models;
 using Shopping.Aggregator.Services;
 
-namespace Shopping.Aggregator.Controller;
+namespace Shopping.Aggregator.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Shopping.WebApp.Models;
 using Shopping.WebApp.Services;
@@ -8,40 +8,64 @@ namespace Shopping.WebApp.Pages;
 public class CheckOutModel : PageModel
 {
     private readonly IBasketService basketService;
-    private readonly IOrderService orderService;
+    private readonly ICurrentUser currentUser;
 
-    public CheckOutModel(IBasketService basketService, IOrderService orderService)
+    public CheckOutModel(IBasketService basketService, ICurrentUser currentUser)
     {
         this.basketService = basketService;
-        this.orderService = orderService;
+        this.currentUser = currentUser;
     }
 
     [BindProperty]
-    public BasketCheckoutModel Order { get; set; }
+    public CheckoutForm Order { get; set; } = new();
 
     public BasketModel Cart { get; set; } = new BasketModel();
 
+    public string UserName => currentUser.UserName;
+
     public async Task<IActionResult> OnGetAsync()
     {
-        var userName = "1234";
-        Cart = await basketService.GetBasket(userName);
+        Cart = await basketService.GetBasket(currentUser.UserName);
+        if (Cart.Items.Count == 0)
+        {
+            return RedirectToPage("Cart");
+        }
+
         return Page();
     }
 
     public async Task<IActionResult> OnPostCheckOutAsync()
     {
-        var userName = "1234";
-        Cart = await basketService.GetBasket(userName);
+        Cart = await basketService.GetBasket(currentUser.UserName);
+        if (Cart.Items.Count == 0)
+        {
+            return RedirectToPage("Cart");
+        }
 
         if (!ModelState.IsValid)
         {
             return Page();
         }
 
-        Order.Username = userName;
-        Order.TotalPrice = Cart.TotalPrice;
+        var checkout = new BasketCheckoutModel
+        {
+            Username = currentUser.UserName,
+            TotalPrice = Cart.TotalPrice,
+            FirstName = Order.FirstName,
+            LastName = Order.LastName,
+            EmailAddress = Order.EmailAddress,
+            AddressLine = Order.AddressLine,
+            Country = Order.Country,
+            State = Order.State,
+            ZipCode = Order.ZipCode,
+            CardName = Order.CardName,
+            CardNumber = Order.CardNumber,
+            Expiration = Order.Expiration,
+            CVV = Order.CVV,
+            PaymentMethod = Order.PaymentMethod
+        };
 
-        await basketService.CheckoutBasket(Order);
+        await basketService.CheckoutBasket(checkout);
 
         return RedirectToPage("Confirmation", "OrderSubmitted");
     }
