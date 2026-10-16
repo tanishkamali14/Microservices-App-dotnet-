@@ -4,7 +4,7 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["src/Ordering.Domain/Ordering.Domain.csproj", "src/Discount.Domain/"]
+COPY ["src/Ordering.Domain/Ordering.Domain.csproj", "src/Ordering.Domain/"]
 COPY ["src/Ordering.Application/Ordering.Application.csproj", "src/Ordering.Application/"]
 COPY ["src/Ordering.Infrastructure/Ordering.Infrastructure.csproj", "src/Ordering.Infrastructure/"]
 COPY ["src/EventBus.Messages/EventBus.Messages.csproj", "src/EventBus.Messages/"]
