@@ -1,5 +1,7 @@
 # Dotnet Microservices Shop
 
+[![CI](https://github.com/tanishkamali14/Microservices-App-dotnet-/actions/workflows/ci.yml/badge.svg)](https://github.com/tanishkamali14/Microservices-App-dotnet-/actions/workflows/ci.yml)
+
 A scalable e-commerce backend built using **ASP.NET Core microservices architecture**, focusing on modular design, distributed systems, and containerized deployment.
 
 ---
@@ -28,4 +30,4 @@ Docker • SQL Server • PostgreSQL • MongoDB • Redis • Entity Framework 
 
 ## ▶️ Run Locally
 ```bash
-docker-compose up --build
+docker compose up --build
