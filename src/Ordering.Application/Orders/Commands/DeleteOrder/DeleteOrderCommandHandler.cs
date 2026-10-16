@@ -1,4 +1,3 @@
-using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Ordering.Application.Common.Contracts.Persistence;
@@ -14,18 +13,16 @@ public record DeleteOrderCommand : IRequest
 
 public class DeleteOrderCommandHandler : IRequestHandler<DeleteOrderCommand>
 {
-    private readonly IMapper mapper;
     private readonly IOrderRepository orderRepository;
     private readonly ILogger<DeleteOrderCommandHandler> logger;
-    
-    public DeleteOrderCommandHandler(IOrderRepository orderRepository, IMapper mapper, ILogger<DeleteOrderCommandHandler> logger)
+
+    public DeleteOrderCommandHandler(IOrderRepository orderRepository, ILogger<DeleteOrderCommandHandler> logger)
     {
-        this.mapper = mapper;
         this.orderRepository = orderRepository;
         this.logger = logger;
     }
 
-    public async Task<Unit> Handle(DeleteOrderCommand request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteOrderCommand request, CancellationToken cancellationToken)
     {
         var orderToDelete = await orderRepository.GetByIdAsync(request.Id);
 
@@ -35,8 +32,6 @@ public class DeleteOrderCommandHandler : IRequestHandler<DeleteOrderCommand>
         }
 
         await orderRepository.DeleteAsync(orderToDelete);
-        logger.LogInformation($"Order {orderToDelete.Id} is successfully deleted.");
-
-        return Unit.Value;
+        logger.LogInformation("Order {OrderId} is successfully deleted.", orderToDelete.Id);
     }
 }

@@ -1,26 +1,15 @@
-using Ocelot.Cache.CacheManager;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
+// Routes live in ocelot.{Environment}.json: "Development" targets the Docker network,
+// "Local" targets services started with `dotnet run` on localhost.
+builder.Configuration.AddJsonFile($"ocelot.{builder.Environment.EnvironmentName}.json", optional: false, reloadOnChange: true);
 
-builder.Host.ConfigureAppConfiguration(opt =>
-{
-    opt.AddJsonFile($"ocelot.{builder.Environment.EnvironmentName}.json");
-});
-
-builder.Services.AddOcelot()
-.AddCacheManager(opt =>
-{
-    opt.WithDictionaryHandle();
-});
+builder.Services.AddOcelot(builder.Configuration);
 
 var app = builder.Build();
 
-
-app.UseOcelot();
-app.Run();
+await app.UseOcelot();
+await app.RunAsync();

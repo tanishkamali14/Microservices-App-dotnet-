@@ -1,20 +1,20 @@
-version: '3.8'
-
 services:
   catalogdb:
-    image: mongo
+    image: mongo:8.0
 
   basketdb:
-    image: redis:alpine
+    image: redis:7.4-alpine
 
   discountdb:
-    image: postgres
-  
+    image: postgres:17-alpine
+
   orderdb:
-    image: mcr.microsoft.com/azure-sql-edge:latest
+    # Azure SQL Edge was retired in September 2025, so use SQL Server 2022.
+    # On Apple Silicon this image runs under Rosetta (enable it in Docker Desktop).
+    image: mcr.microsoft.com/mssql/server:2022-latest
 
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:9
 
   portainer:
     image: portainer/portainer-ce
@@ -30,7 +30,7 @@ services:
     build:
       context: .
       dockerfile: src/Basket.API/Dockerfile
-  
+
   discount.api:
     image: ${DOCKER_REGISTRY-}discountapi
     build:
@@ -50,7 +50,7 @@ services:
       dockerfile: src/Ordering.API/Dockerfile
 
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:4-management-alpine
 
   ocelotapi.gateway:
     image: ${DOCKER_REGISTRY-}ocelotapi.gateway

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   catalogdb:
     container_name: catalog_db
@@ -65,20 +63,20 @@ services:
     depends_on:
       - catalogdb
     ports:
-      - "8000:80"
+      - "8000:8080"
 
   basket.api:
     container_name: basket.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "CacheSettings:ConnectionString=basketdb:6379"
-      - "GrpcSettings:DiscountUrl=http://discount.grpc"
+      - "GrpcSettings:DiscountUrl=http://discount.grpc:8080"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672"
     depends_on:
       - basketdb
       - rabbitmq
     ports:
-      - "8001:80"
+      - "8001:8080"
   
   discount.api:
     container_name: discount.api
@@ -88,7 +86,7 @@ services:
     depends_on:
       - discountdb
     ports:
-      - "8002:80"
+      - "8002:8080"
 
   discount.grpc:
     container_name: discount.grpc
@@ -98,19 +96,21 @@ services:
     depends_on:
       - discountdb
     ports:
-      - "8003:80"
+      - "8003:8080"
 
   ordering.api:
     container_name: ordering.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "ConnectionStrings:OrderingConnectionString=Server=orderdb;Database=OrderDb;User Id=sa;Password=StrongPassword1234!"
+      # TrustServerCertificate: since EF Core 7, SQL Server connections are encrypted by default and
+      # the development container only has a self-signed certificate.
+      - "ConnectionStrings:OrderingConnectionString=Server=orderdb;Database=OrderDb;User Id=sa;Password=StrongPassword1234!;TrustServerCertificate=True"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672"
     depends_on:
       - orderdb
       - rabbitmq
     ports:
-      - "8004:80"
+      - "8004:8080"
 
   rabbitmq:
     container_name: rabbitmq
@@ -129,27 +129,27 @@ services:
       - discount.api
       - ordering.api
     ports:
-      - "8010:80"
+      - "8010:8080"
 
   shopping.aggregator:
     container_name: shopping.aggregator
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "ApiSettings:CatalogUrl=http://catalog.api"
-      - "ApiSettings:BasketUrl=http://basket.api"
-      - "ApiSettings:OrderingUrl=http://ordering.api"
+      - "ApiSettings:CatalogUrl=http://catalog.api:8080"
+      - "ApiSettings:BasketUrl=http://basket.api:8080"
+      - "ApiSettings:OrderingUrl=http://ordering.api:8080"
     depends_on:
       - catalog.api
       - basket.api
       - ordering.api
     ports:
-      - "8005:80"
+      - "8005:8080"
 
   shopping.webapp:
     container_name: shopping.webapp
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "ApiSettings:GatewayAddress=http://ocelotapi.gateway"
+      - "ApiSettings:GatewayAddress=http://ocelotapi.gateway:8080"
     depends_on:
       - ocelotapi.gateway
       - catalog.api
@@ -157,4 +157,4 @@ services:
       - discount.api
       - ordering.api
     ports:
-      - "8006:80"
+      - "8006:8080"

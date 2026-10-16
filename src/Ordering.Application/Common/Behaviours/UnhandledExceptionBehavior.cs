@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Ordering.Application.Common.Behaviours;
 
-public class UnhandledExceptionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>
+public class UnhandledExceptionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
     private readonly ILogger<TRequest> logger;
 
@@ -21,7 +21,7 @@ public class UnhandledExceptionBehavior<TRequest, TResponse> : IPipelineBehavior
         catch (Exception e)
         {
             var requestName = typeof(TRequest).Name;
-            logger.LogError(e, $"Application Request: Unhandled Exception for Request {requestName}");
+            logger.LogError(e, "Application Request: Unhandled Exception for Request {RequestName}", requestName);
             throw;
         }
     }

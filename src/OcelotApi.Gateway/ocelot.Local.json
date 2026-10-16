@@ -7,16 +7,29 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8000"
+          "Port": 8000
         }
       ],
       "UpstreamPathTemplate": "/Catalog",
       "UpstreamHttpMethod": [
-        "GET",
+        "GET"
+      ],
+      "CacheOptions": { "TtlSeconds": 30 }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Catalog",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 8000
+        }
+      ],
+      "UpstreamPathTemplate": "/Catalog",
+      "UpstreamHttpMethod": [
         "POST",
         "PUT"
-      ],
-      "FileCacheOptions": { "TltSeconds": 30 }
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/v1/Catalog/{id}",
@@ -24,7 +37,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8000"
+          "Port": 8000
         }
       ],
       "UpstreamPathTemplate": "/Catalog/{id}",
@@ -39,7 +52,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8000"
+          "Port": 8000
         }
       ],
       "UpstreamPathTemplate": "/api/v1/Catalog/GetProductByCategory/{category}",
@@ -54,7 +67,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8001"
+          "Port": 8001
         }
       ],
       "UpstreamPathTemplate": "/Basket/{userName}",
@@ -69,7 +82,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8001"
+          "Port": 8001
         }
       ],
       "UpstreamPathTemplate": "/Basket/",
@@ -83,7 +96,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8001"
+          "Port": 8001
         }
       ],
       "UpstreamPathTemplate": "/Basket/Checkout",
@@ -91,12 +104,11 @@
         "POST"
       ],
       "RateLimitOptions": {
-        "ClientWhitelist": [],
-        "EnableRateLimiting": true,
-        "Period": "4s",
-        "PeriodTimespan": 1,
-        "Limit": 1
-      }
+          "EnableRateLimiting": true,
+          "Period": "4s",
+          "Wait": "1s",
+          "Limit": 1
+        }
     },
     // Discount API
     {
@@ -105,7 +117,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8002"
+          "Port": 8002
         }
       ],
       "UpstreamPathTemplate": "/Discount/{productName}",
@@ -120,7 +132,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8002"
+          "Port": 8002
         }
       ],
       "UpstreamPathTemplate": "/Discount",
@@ -136,7 +148,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8004"
+          "Port": 8004
         }
       ],
       "UpstreamPathTemplate": "/Order/{userName}",

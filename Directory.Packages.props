@@ -1,0 +1,33 @@
+<Project>
+  <!-- Central package management: every NuGet version is defined once, here. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup Label="Microsoft">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup Label="Messaging and CQRS">
+    <!-- MassTransit v8 and MediatR v12 are the last Apache-2.0 releases; newer majors need a commercial license. -->
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.10" />
+    <PackageVersion Include="MediatR" Version="12.5.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Data access">
+    <PackageVersion Include="Dapper" Version="2.1.79" />
+    <PackageVersion Include="MongoDB.Driver" Version="3.11.0" />
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup Label="APIs and integrations">
+    <PackageVersion Include="Grpc.AspNetCore" Version="2.84.0" />
+    <PackageVersion Include="Ocelot" Version="25.0.2" />
+    <PackageVersion Include="SendGrid" Version="9.29.3" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.0" />
+  </ItemGroup>
+</Project>

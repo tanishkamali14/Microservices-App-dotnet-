@@ -1,10 +1,9 @@
-using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Ordering.Application.Common.Contracts.Notifications;
 using Ordering.Application.Common.Contracts.Persistence;
+using Ordering.Application.Common.Mappings;
 using Ordering.Application.Common.Models;
-using Ordering.Domain.Entities;
 
 namespace Ordering.Application.Orders.Commands.CheckoutOrder;
 
@@ -32,14 +31,12 @@ public record CheckoutOrderCommand : IRequest<int>
 
 public class CheckoutOrderCommandHandler : IRequestHandler<CheckoutOrderCommand, int>
 {
-    private readonly IMapper mapper;
     private readonly IOrderRepository orderRepository;
     private readonly IEmailService emailService;
     private readonly ILogger<CheckoutOrderCommandHandler> logger;
 
-    public CheckoutOrderCommandHandler(IMapper mapper, IOrderRepository orderRepository, IEmailService emailService, ILogger<CheckoutOrderCommandHandler> logger)
+    public CheckoutOrderCommandHandler(IOrderRepository orderRepository, IEmailService emailService, ILogger<CheckoutOrderCommandHandler> logger)
     {
-        this.mapper = mapper;
         this.orderRepository = orderRepository;
         this.emailService = emailService;
         this.logger = logger;
@@ -47,10 +44,10 @@ public class CheckoutOrderCommandHandler : IRequestHandler<CheckoutOrderCommand,
 
     public async Task<int> Handle(CheckoutOrderCommand request, CancellationToken cancellationToken)
     {
-        var orderEntity = mapper.Map<Order>(request);
+        var orderEntity = request.ToOrder();
         var newOrder = await orderRepository.AddAsync(orderEntity);
 
-        logger.LogInformation($"Order {newOrder.Id} is successfully created.");
+        logger.LogInformation("Order {OrderId} is successfully created.", newOrder.Id);
 
         var email = new Email()
         {
@@ -65,7 +62,7 @@ public class CheckoutOrderCommandHandler : IRequestHandler<CheckoutOrderCommand,
         }
         catch (Exception e)
         {
-            logger.LogError($"Order {newOrder.Id} failed due to an error with the mail service: {e.Message}");
+            logger.LogError(e, "Order {OrderId} failed due to an error with the mail service", newOrder.Id);
         }
 
         return newOrder.Id;

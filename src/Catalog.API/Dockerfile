@@ -1,19 +1,21 @@
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
-EXPOSE 80
+EXPOSE 8080
+# Run as the non-root user that ships with the .NET 8+ images.
+USER $APP_UID
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+# Restore first so the package layer is cached until a project file changes.
+COPY ["global.json", "Directory.Build.props", "Directory.Packages.props", "./"]
 COPY ["src/Catalog.API/Catalog.API.csproj", "src/Catalog.API/"]
 RUN dotnet restore "src/Catalog.API/Catalog.API.csproj"
 COPY . .
-WORKDIR "/src/src/Catalog.API/"
-RUN dotnet build "Catalog.API.csproj" -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish "Catalog.API.csproj" -c Release -o /app/publish
+WORKDIR "/src/src/Catalog.API"
+RUN dotnet publish "Catalog.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish --no-restore /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "Catalog.API.dll"]

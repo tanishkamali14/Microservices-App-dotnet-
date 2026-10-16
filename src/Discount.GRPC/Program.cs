@@ -1,25 +1,12 @@
-using System.Reflection;
 using Discount.GRPC.Extensions;
 using Discount.GRPC.Repositories;
 using Discount.GRPC.Services;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Additional configuration is required to successfully run gRPC on macOS.
-// For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
-
 // Add services to the container.
 builder.Services.AddGrpc();
-builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
-
-// builder.WebHost.ConfigureKestrel(options =>
-// {
-//     // Setup a HTTP/2 endpoint without TLS.
-//     options.ListenLocalhost(5003, o => o.Protocols =
-//         HttpProtocols.Http2);
-// });
 
 var app = builder.Build();
 
