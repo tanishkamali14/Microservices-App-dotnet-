@@ -1,110 +1,157 @@
-# Dotnet Microservices Shop
+# Microservices Shop
+
+A sample online shop built with ASP.NET Core microservices. The storefront talks to an API gateway and supporting services for catalog, basket, discounts, and orders. Docker Compose runs the application and its local infrastructure together.
+
+> **Status:** learning and portfolio project. It is not ready for real customers or payment data; see [Security notes](#security-notes).
 
 [![CI](https://github.com/tanishkamali14/Microservices-App-dotnet-/actions/workflows/ci.yml/badge.svg)](https://github.com/tanishkamali14/Microservices-App-dotnet-/actions/workflows/ci.yml)
 
-An e-commerce backend built with **ASP.NET Core microservices**: separate services and databases for the catalog, baskets, discounts and orders, an API gateway, and event-driven checkout.
+## Contents
 
-It started from the [aspnetrun microservices course](#credits) and has been extended with the fixes and features listed under [Changes on top of the course code](#changes-on-top-of-the-course-code).
+- [What’s included](#whats-included)
+- [Architecture](#architecture)
+- [Run locally](#run-locally)
+- [Service URLs](#service-urls)
+- [Build and test](#build-and-test)
+- [Configuration](#configuration)
+- [Deployment](#deployment)
+- [Security notes](#security-notes)
+- [Credits and license](#credits-and-license)
 
----
+## What’s included
 
-## 🚀 Tech Stack
-ASP.NET Core (.NET 10) • Web APIs • gRPC • RabbitMQ (MassTransit) • Ocelot API Gateway  
-Docker • SQL Server • PostgreSQL • MongoDB • Redis • Entity Framework Core • Dapper  
-OpenTelemetry • Polly • xUnit • GitHub Actions
+- **Catalog**: product data stored in MongoDB.
+- **Basket**: Redis-backed baskets, server-side product pricing, and discount lookup.
+- **Discount**: a REST API and a gRPC service backed by PostgreSQL.
+- **Ordering**: order processing with SQL Server, CQRS, MediatR, and Entity Framework Core.
+- **Messaging**: RabbitMQ and MassTransit publish checkout events to Ordering.
+- **Storefront and APIs**: an ASP.NET Core web app, an Ocelot API gateway, and a response aggregator.
+- **Operations**: health checks, OpenTelemetry, an Aspire dashboard, Docker health checks, and GitHub Actions CI.
 
----
+The solution targets **.NET 10**. Package versions are managed centrally in `Directory.Packages.props`.
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
-flowchart TB
-    Browser --> WebApp[Shopping.WebApp]
-    WebApp --> Gateway[OcelotApi.Gateway]
-    Aggregator[Shopping.Aggregator]
+flowchart LR
+    Browser --> Web[Shopping.WebApp]
+    Web --> Gateway[Ocelot API Gateway]
+    Gateway --> Catalog[Catalog API]
+    Gateway --> Basket[Basket API]
+    Gateway --> Discount[Discount API]
+    Gateway --> Orders[Ordering API]
+    Aggregator[Shopping Aggregator] --> Catalog
+    Aggregator --> Basket
+    Aggregator --> Orders
 
-    Gateway --> Catalog[Catalog.API]
-    Gateway --> Basket[Basket.API]
-    Gateway --> Discount[Discount.API]
-    Gateway --> Ordering[Ordering.API]
-    Aggregator -.-> Catalog & Basket & Ordering
-
-    Basket -- prices --> Catalog
-    Basket -- gRPC --> DiscountGrpc[Discount.GRPC]
-    Basket -- checkout event --> RabbitMQ{{RabbitMQ}}
-    RabbitMQ --> Ordering
+    Basket -->|product prices| Catalog
+    Basket -->|gRPC discount lookup| DiscountGrpc[Discount gRPC]
+    Basket -->|checkout event| RabbitMQ[(RabbitMQ)]
+    RabbitMQ --> Orders
 
     Catalog --> Mongo[(MongoDB)]
     Basket --> Redis[(Redis)]
     Discount --> Postgres[(PostgreSQL)]
     DiscountGrpc --> Postgres
-    Ordering --> SqlServer[(SQL Server)]
+    Orders --> SqlServer[(SQL Server)]
 ```
 
-- **Independent microservices** (Catalog, Basket, Discount, Ordering), each with its own database
-- **API Gateway (Ocelot)** in front of the services, plus an aggregator that combines their responses
-- **Synchronous calls over gRPC** (Basket → Discount) and **asynchronous messaging over RabbitMQ** (checkout → Ordering)
-- **Clean Architecture and CQRS** in the Ordering service (MediatR, FluentValidation, EF Core)
+Checkout messages use an inbox/outbox and an idempotency key to guard against duplicate order creation when messages are redelivered. Service-to-service HTTP and gRPC calls use resilience policies. Readiness checks report whether each service's own dependencies are available.
 
----
+## Run locally
 
-## 🛠️ Changes on top of the course code
-- **Upgraded** every service from .NET 6/7 (out of support) to **.NET 10 LTS**, with central package management, and replaced AutoMapper (CVE-2026-32933) with explicit mappings
-- **Fixed** the Docker build paths, gateway routes, the web app's cart and checkout flow, catalog seeding and email settings binding
-- **Price tampering and discount stacking:** baskets are now priced from the catalog on the server, so the client can't set prices and a discount can't be applied twice
-- **Safe database startup:** the Discount service no longer drops its table on every start; migrations are idempotent and retried with backoff instead of a recursive `Thread.Sleep`
-- **No duplicate orders:** checkout uses MassTransit's transactional inbox/outbox and an idempotency key, so a retried checkout can't create a second order
-- **Resilience:** retries, timeouts and circuit breakers on HTTP and gRPC calls between services
-- **Observability:** `/health/live` and `/health/ready` on every service, OpenTelemetry logs, traces and metrics, and Docker healthchecks so services wait for their databases
-- **Secrets:** passwords come from a git-ignored `.env` file instead of the repository; removed Portainer, which had root-level access to the Docker host
-- **Tests and CI:** xUnit tests for pricing, ordering and health endpoints, run by GitHub Actions on pull requests and pushes to `main`, together with a Docker image build
+### Requirements
 
----
+- Git
+- Docker Desktop with Docker Compose
+- .NET 10 SDK, if you want to build or run tests outside containers
 
-## ▶️ Run Locally
-Requires Docker (and the .NET 10 SDK for running tests or services outside Docker). Create your `.env` from the template, change the passwords, then start everything:
+### Start the stack
+
+From the repository root, create a local environment file from the template and replace the example passwords with your own development-only values:
+
+**PowerShell**
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
+
+**macOS/Linux**
 
 ```bash
 cp .env.example .env
-docker compose up --build
+${EDITOR:-nano} .env
 ```
 
-| What | URL |
-|---|---|
-| Shop (web app) | http://localhost:8006 |
-| API gateway | http://localhost:8010 |
-| Catalog, Basket, Discount, Ordering APIs (Swagger UI at `/swagger`) | ports 8000, 8001, 8002, 8004 |
-| Shopping aggregator | http://localhost:8005 |
-| Aspire dashboard (logs, traces, metrics) | http://localhost:18888 |
-| RabbitMQ management (user and password from `.env`) | http://localhost:15672 |
-| pgAdmin (`admin@aspnetrun.com`, password from `.env`) | http://localhost:5050 |
-
-Every service also answers `GET /health/live` and `GET /health/ready`.
-
-> If you ran an older version of the stack, run `docker compose down -v` once so the databases are recreated with the passwords from `.env`.
-
-### Running a service outside Docker
-Start the infrastructure with `docker compose up -d catalogdb basketdb discountdb orderdb rabbitmq`, then give the services the passwords from your `.env` through [user secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets) (once per machine):
+Start all services in the background:
 
 ```bash
-dotnet user-secrets set "DatabaseSettings:ConnectionString" "Server=localhost;Port=5432;Database=DiscountDb;User Id=admin;Password=<POSTGRES_PASSWORD>" --project src/Discount.API
-dotnet user-secrets set "DatabaseSettings:ConnectionString" "Server=localhost;Port=5432;Database=DiscountDb;User Id=admin;Password=<POSTGRES_PASSWORD>" --project src/Discount.GRPC
-dotnet user-secrets set "ConnectionStrings:OrderingConnectionString" "Server=localhost;Database=OrderDb;User Id=sa;Password=<MSSQL_SA_PASSWORD>;TrustServerCertificate=True" --project src/Ordering.API
-dotnet user-secrets set "EventBusSettings:HostAddress" "amqp://<RABBITMQ_USER>:<RABBITMQ_PASSWORD>@localhost:5672" --project src/Ordering.API
-dotnet user-secrets set "EventBusSettings:HostAddress" "amqp://<RABBITMQ_USER>:<RABBITMQ_PASSWORD>@localhost:5672" --project src/Basket.API
-
-dotnet run --project src/Catalog.API   # and likewise for the other services
+docker compose up --build -d
+docker compose ps
 ```
 
----
+To follow the logs, run `docker compose logs -f`. Press **Ctrl+C** to stop following logs; the containers keep running. Stop the stack with:
 
-## ✅ Tests
 ```bash
-dotnet test
+docker compose down
 ```
 
----
+This keeps database volumes. To remove the containers **and delete local database data**, use `docker compose down -v`.
 
-## Credits
-- Based on the earlier, Ocelot-based version of the **aspnetrun** course *Microservices Architecture and Implementation on .NET* by Mehmet Ozkaya ([reference code](https://github.com/aspnetrun/run-aspnetcore-microservices), MIT licensed; see [LICENSE](LICENSE)).
-- Storefront theme: [Bootstrap e-commerce theme by T-PHP](https://t-php.fr/43-theme-ecommerce-bootstrap-4.html).
+## Service URLs
+
+| Service | Local URL | Notes |
+|---|---|---|
+| Shop | <http://localhost:8006> | Storefront |
+| API Gateway | <http://localhost:8010> | Public entry point for service APIs |
+| Catalog API | <http://localhost:8000/swagger> | Swagger UI |
+| Basket API | <http://localhost:8001/swagger> | Swagger UI |
+| Discount REST API | <http://localhost:8002/swagger> | Swagger UI |
+| Discount gRPC | <http://localhost:8003> | gRPC endpoint |
+| Ordering API | <http://localhost:8004/swagger> | Swagger UI |
+| Shopping Aggregator | <http://localhost:8005> | Aggregated API |
+| Aspire Dashboard | <http://localhost:18888> | Local logs, traces, and metrics |
+| RabbitMQ Management | <http://localhost:15672> | Credentials are in `.env` |
+| pgAdmin | <http://localhost:5050> | Password is in `.env` |
+
+HTTP services expose `GET /health/live` and `GET /health/ready`. The gateway health endpoint is available at <http://localhost:8010/health/ready>.
+
+## Build and test
+
+Run from the repository root with the .NET 10 SDK:
+
+```bash
+dotnet restore MicroservicesShop.sln
+dotnet build MicroservicesShop.sln --no-restore
+dotnet test MicroservicesShop.sln --no-build
+```
+
+The tests cover basket pricing, catalog behavior, ordering rules, and health endpoints. GitHub Actions also builds and tests the solution and builds the Docker images.
+
+## Configuration
+
+- `.env.example` documents the values Docker Compose needs. Keep your actual `.env` file local; it is ignored by Git.
+- Docker Compose is the documented way to run the full application locally. The .NET SDK is needed to build and test the solution on the host.
+- Do not put production credentials in `appsettings.json`, source control, or a Docker image. Use your hosting provider's secret manager for a deployed environment.
+
+## Deployment
+
+GitHub hosts the source code and runs CI; it does not run this complete application. `docker-compose.yml` is intended for local development and is not a production deployment by itself. A production host must support the .NET services and long-running message processing, and provide durable, secured databases, cache, and message broker services.
+
+Vercel does not deploy this Compose stack as-is. Hosting there would require translating the HTTP services to Vercel's service configuration and moving the stateful databases, cache, and broker to external managed services. For a first deployment, use a platform designed to run Docker Compose or long-running containers, and keep the services private behind a secured public entry point.
+
+Before making the app public, address the limitations below and configure HTTPS, authentication, secret storage, backups, and production network access controls.
+
+## Security notes
+
+- The sample has **no user authentication or authorization**. The demo identity is not suitable for a public shop.
+- The course application stores card numbers and CVV values with orders. **Never enter real payment details.** Remove this behavior or integrate a compliant payment provider before any real use.
+- Local `.env` values are for development only. Passwords that were committed in the original repository may remain in Git history; replacing them in the current files does not erase that history.
+- The Aspire dashboard is configured for unauthenticated access on loopback for local development. Do not expose it publicly.
+
+## Credits and license
+
+This project builds on the earlier Ocelot-based version of Mehmet Ozkaya's **aspnetrun Microservices Architecture and Implementation on .NET** course ([reference repository](https://github.com/aspnetrun/run-aspnetcore-microservices)). The original MIT license notice is retained in [LICENSE](LICENSE).
+
+The storefront uses the [T-PHP Bootstrap e-commerce theme](https://t-php.fr/43-theme-ecommerce-bootstrap-4.html).
