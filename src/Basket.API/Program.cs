@@ -1,5 +1,6 @@
 using Basket.API.GrpcService;
 using Basket.API.Repositories;
+using Basket.API.Services;
 using Discount.GRPC.Protos;
 using MassTransit;
 
@@ -20,7 +21,10 @@ builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(opt =>
     opt.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]!)
 );
-builder.Services.AddScoped<DiscountGrpcService>();
+builder.Services.AddScoped<IDiscountClient, DiscountGrpcService>();
+builder.Services.AddHttpClient<ICatalogClient, CatalogClient>(client =>
+    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:CatalogUrl"]!));
+builder.Services.AddScoped<BasketPricingService>();
 
 builder.Services.AddMassTransit(config =>
 {

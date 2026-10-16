@@ -1,7 +1,7 @@
 using Basket.API.Entities;
-using Basket.API.GrpcService;
 using Basket.API.Mapping;
 using Basket.API.Repositories;
+using Basket.API.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,14 +13,14 @@ public class BasketController : ControllerBase
 {
     private readonly ILogger<BasketController> logger;
     private readonly IBasketRepository repository;
-    private readonly DiscountGrpcService discountGrpcService;
+    private readonly BasketPricingService pricing;
     private readonly IPublishEndpoint publishEndpoint;
 
-    public BasketController(ILogger<BasketController> logger, IBasketRepository repository, DiscountGrpcService discountGrpcService, IPublishEndpoint publishEndpoint)
+    public BasketController(ILogger<BasketController> logger, IBasketRepository repository, BasketPricingService pricing, IPublishEndpoint publishEndpoint)
     {
         this.logger = logger;
         this.repository = repository;
-        this.discountGrpcService = discountGrpcService;
+        this.pricing = pricing;
         this.publishEndpoint = publishEndpoint;
     }
 
@@ -34,12 +34,18 @@ public class BasketController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<ShoppingCart>> UpdateBasket([FromBody] ShoppingCart basket)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ShoppingCart>> UpdateBasket([FromBody] ShoppingCart basket, CancellationToken cancellationToken)
     {
-        foreach (var item in basket.Items)
+        try
         {
-            var coupon = await discountGrpcService.GetDiscount(item.ProductName);
-            item.Price -= coupon.Amount;
+            // Re-price from the catalog on every save: the old code subtracted the discount from
+            // whatever price the client sent, so each save applied the discount again.
+            await pricing.PriceAsync(basket, cancellationToken);
+        }
+        catch (InvalidBasketException ex)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "Invalid basket", detail: ex.Message);
         }
 
         return Ok(await repository.UpdateBasket(basket));

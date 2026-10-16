@@ -1,9 +1,12 @@
+using Basket.API.Services;
 using Discount.GRPC.Protos;
 
 namespace Basket.API.GrpcService;
 
-public class DiscountGrpcService
+public class DiscountGrpcService : IDiscountClient
 {
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(5);
+
     private readonly DiscountProtoService.DiscountProtoServiceClient discountProtoService;
 
     public DiscountGrpcService(DiscountProtoService.DiscountProtoServiceClient discountProtoService)
@@ -11,13 +14,14 @@ public class DiscountGrpcService
         this.discountProtoService = discountProtoService;
     }
 
-    public async Task<CouponModel> GetDiscount(string productName)
+    public async Task<int> GetDiscountAmountAsync(string productName, CancellationToken cancellationToken = default)
     {
-        var discountRequest = new GetDiscountRequest
+        var request = new GetDiscountRequest
         {
             ProductName = productName
         };
 
-        return await discountProtoService.GetDiscountAsync(discountRequest);
+        var coupon = await discountProtoService.GetDiscountAsync(request, deadline: DateTime.UtcNow.Add(Timeout), cancellationToken: cancellationToken);
+        return coupon.Amount;
     }
 }

@@ -41,7 +41,13 @@
                                 <td>@cartItem.ProductName</td>
                                 <td>In stock</td>
                                 <td class="text-center">@cartItem.Quantity</td>
-                                <td class="text-right">@(cartItem.Price * cartItem.Quantity) $</td>
+                                <td class="text-right">
+                                    @if (cartItem.Discount > 0)
+                                    {
+                                        <small class="text-muted"><del>@(cartItem.UnitPrice * cartItem.Quantity) $</del></small>
+                                    }
+                                    @(cartItem.Price * cartItem.Quantity) $
+                                </td>
                                 <td class="text-right">
 
                                     <form asp-page-handler="RemoveFromCart" method="post">

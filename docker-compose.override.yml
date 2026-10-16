@@ -71,10 +71,13 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - "CacheSettings:ConnectionString=basketdb:6379"
       - "GrpcSettings:DiscountUrl=http://discount.grpc:8080"
+      - "ApiSettings:CatalogUrl=http://catalog.api:8080"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672"
     depends_on:
       - basketdb
       - rabbitmq
+      - catalog.api
+      - discount.grpc
     ports:
       - "8001:8080"
   
