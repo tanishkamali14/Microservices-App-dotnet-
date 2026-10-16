@@ -1,4 +1,5 @@
 using Basket.API.GrpcService;
+using Basket.API.HealthChecks;
 using Basket.API.Repositories;
 using Basket.API.Services;
 using Discount.GRPC.Protos;
@@ -7,6 +8,7 @@ using Grpc.Net.Client.Configuration;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 // Add services to the container.
 
@@ -58,6 +60,12 @@ builder.Services.AddMassTransit(config =>
     });
 });
 
+// MassTransit registers its own RabbitMQ check with the "ready" tag.
+// Catalog and Discount are deliberately not checked here: if they are down, Basket should
+// keep serving what it can rather than be taken out of rotation too.
+builder.Services.AddHealthChecks()
+    .AddCheck<RedisHealthCheck>("redis", tags: [ServiceDefaultsExtensions.ReadyTag]);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -70,5 +78,6 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapDefaultEndpoints();
 
 app.Run();

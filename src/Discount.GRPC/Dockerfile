@@ -11,6 +11,7 @@ WORKDIR /src
 COPY ["global.json", "Directory.Build.props", "Directory.Packages.props", "./"]
 COPY ["src/Discount.GRPC/Discount.GRPC.csproj", "src/Discount.GRPC/"]
 COPY ["src/Discount.Data/Discount.Data.csproj", "src/Discount.Data/"]
+COPY ["src/Shop.ServiceDefaults/Shop.ServiceDefaults.csproj", "src/Shop.ServiceDefaults/"]
 RUN dotnet restore "src/Discount.GRPC/Discount.GRPC.csproj"
 COPY . .
 WORKDIR "/src/src/Discount.GRPC"

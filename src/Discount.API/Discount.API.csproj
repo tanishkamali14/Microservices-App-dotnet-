@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Discount.Data\Discount.Data.csproj" />
+    <ProjectReference Include="..\Shop.ServiceDefaults\Shop.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

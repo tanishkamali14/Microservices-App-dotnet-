@@ -11,6 +11,7 @@ WORKDIR /src
 COPY ["global.json", "Directory.Build.props", "Directory.Packages.props", "./"]
 COPY ["src/Basket.API/Basket.API.csproj", "src/Basket.API/"]
 COPY ["src/EventBus.Messages/EventBus.Messages.csproj", "src/EventBus.Messages/"]
+COPY ["src/Shop.ServiceDefaults/Shop.ServiceDefaults.csproj", "src/Shop.ServiceDefaults/"]
 RUN dotnet restore "src/Basket.API/Basket.API.csproj"
 COPY . .
 WORKDIR "/src/src/Basket.API"

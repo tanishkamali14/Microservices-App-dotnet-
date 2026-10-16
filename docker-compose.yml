@@ -1,17 +1,43 @@
 services:
+  # Each infrastructure container reports when it can actually accept work, so the services
+  # below can wait for "healthy" instead of racing the databases on startup.
   catalogdb:
     image: mongo:8.0
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   basketdb:
     image: redis:7.4-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   discountdb:
     image: postgres:17-alpine
+    healthcheck:
+      # Over TCP, so the temporary socket-only server used during first-time init doesn't count.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   orderdb:
     # Azure SQL Edge was retired in September 2025, so use SQL Server 2022.
     # On Apple Silicon this image runs under Rosetta (enable it in Docker Desktop).
     image: mcr.microsoft.com/mssql/server:2022-latest
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -b -Q \"SELECT 1\" -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   pgadmin:
     image: dpage/pgadmin4:9
@@ -51,6 +77,16 @@ services:
 
   rabbitmq:
     image: rabbitmq:4-management-alpine
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  aspire-dashboard:
+    # Local viewer for the logs, traces and metrics that every service exports over OTLP.
+    image: mcr.microsoft.com/aspire/dashboard:13.6
 
   ocelotapi.gateway:
     image: ${DOCKER_REGISTRY-}ocelotapi.gateway

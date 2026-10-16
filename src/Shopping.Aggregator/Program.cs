@@ -1,6 +1,7 @@
 using Shopping.Aggregator.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 builder.Services.AddHttpClient<ICatalogService, CatalogService>(e =>
     e.BaseAddress = new Uri(builder.Configuration["ApiSettings:CatalogUrl"]!)
@@ -30,5 +31,6 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapDefaultEndpoints();
 
 app.Run();

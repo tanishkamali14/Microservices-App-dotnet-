@@ -2,6 +2,7 @@ using Microsoft.Extensions.Http.Resilience;
 using Shopping.WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 builder.Services.AddHttpClient<ICatalogService, CatalogService>(opt =>
 {
@@ -42,5 +43,6 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapDefaultEndpoints();
 
 app.Run();

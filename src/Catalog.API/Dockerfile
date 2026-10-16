@@ -10,6 +10,7 @@ WORKDIR /src
 # Restore first so the package layer is cached until a project file changes.
 COPY ["global.json", "Directory.Build.props", "Directory.Packages.props", "./"]
 COPY ["src/Catalog.API/Catalog.API.csproj", "src/Catalog.API/"]
+COPY ["src/Shop.ServiceDefaults/Shop.ServiceDefaults.csproj", "src/Shop.ServiceDefaults/"]
 RUN dotnet restore "src/Catalog.API/Catalog.API.csproj"
 COPY . .
 WORKDIR "/src/src/Catalog.API"

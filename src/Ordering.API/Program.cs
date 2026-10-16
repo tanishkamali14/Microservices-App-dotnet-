@@ -9,6 +9,7 @@ using Ordering.Infrastructure;
 using Ordering.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -50,6 +51,10 @@ builder.Services.AddMassTransit(config =>
     });
 });
 
+// MassTransit registers its own RabbitMQ check with the "ready" tag.
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<OrderContext>("sqlserver", tags: [ServiceDefaultsExtensions.ReadyTag]);
+
 var app = builder.Build();
 
 await app.Services.MigrateDatabaseAsync<OrderContext>(async (context, services) =>
@@ -70,5 +75,6 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapDefaultEndpoints();
 
 await app.RunAsync();

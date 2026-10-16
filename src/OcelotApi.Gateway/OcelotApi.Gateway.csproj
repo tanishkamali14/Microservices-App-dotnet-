@@ -4,4 +4,8 @@
     <PackageReference Include="Ocelot" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Shop.ServiceDefaults\Shop.ServiceDefaults.csproj" />
+  </ItemGroup>
+
 </Project>

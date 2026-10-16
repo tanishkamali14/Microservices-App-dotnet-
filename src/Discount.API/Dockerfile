@@ -11,6 +11,7 @@ WORKDIR /src
 COPY ["global.json", "Directory.Build.props", "Directory.Packages.props", "./"]
 COPY ["src/Discount.API/Discount.API.csproj", "src/Discount.API/"]
 COPY ["src/Discount.Data/Discount.Data.csproj", "src/Discount.Data/"]
+COPY ["src/Shop.ServiceDefaults/Shop.ServiceDefaults.csproj", "src/Shop.ServiceDefaults/"]
 RUN dotnet restore "src/Discount.API/Discount.API.csproj"
 COPY . .
 WORKDIR "/src/src/Discount.API"

@@ -60,8 +60,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "DatabaseSettings:ConnectionString=mongodb://catalogdb:27017"
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
-      - catalogdb
+      catalogdb:
+        condition: service_healthy
     ports:
       - "8000:8080"
 
@@ -73,11 +75,16 @@ services:
       - "GrpcSettings:DiscountUrl=http://discount.grpc:8080"
       - "ApiSettings:CatalogUrl=http://catalog.api:8080"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672"
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
-      - basketdb
-      - rabbitmq
-      - catalog.api
-      - discount.grpc
+      basketdb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      catalog.api:
+        condition: service_started
+      discount.grpc:
+        condition: service_started
     ports:
       - "8001:8080"
   
@@ -86,8 +93,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "DatabaseSettings:ConnectionString=Server=discountdb;Port=5432;Database=DiscountDb;User Id=admin;Password=admin1234;"
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
-      - discountdb
+      discountdb:
+        condition: service_healthy
     ports:
       - "8002:8080"
 
@@ -96,8 +105,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "DatabaseSettings:ConnectionString=Server=discountdb;Port=5432;Database=DiscountDb;User Id=admin;Password=admin1234;"
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
-      - discountdb
+      discountdb:
+        condition: service_healthy
     ports:
       - "8003:8080"
 
@@ -109,9 +120,12 @@ services:
       # the development container only has a self-signed certificate.
       - "ConnectionStrings:OrderingConnectionString=Server=orderdb;Database=OrderDb;User Id=sa;Password=StrongPassword1234!;TrustServerCertificate=True"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672"
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
-      - orderdb
-      - rabbitmq
+      orderdb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "8004:8080"
 
@@ -122,10 +136,20 @@ services:
       - "5672:5672"
       - "15672:15672"
 
+  aspire-dashboard:
+    container_name: aspire-dashboard
+    environment:
+      # Local development only: skips the login token the dashboard otherwise prints to its log.
+      - ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true
+    ports:
+      - "127.0.0.1:18888:18888"   # dashboard UI
+      - "127.0.0.1:4317:18889"    # OTLP/gRPC, for services started with `dotnet run`
+
   ocelotapi.gateway:
     container_name: ocelotapi.gateway
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
       - catalog.api
       - basket.api
@@ -141,6 +165,7 @@ services:
       - "ApiSettings:CatalogUrl=http://catalog.api:8080"
       - "ApiSettings:BasketUrl=http://basket.api:8080"
       - "ApiSettings:OrderingUrl=http://ordering.api:8080"
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
       - catalog.api
       - basket.api
@@ -153,6 +178,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "ApiSettings:GatewayAddress=http://ocelotapi.gateway:8080"
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
     depends_on:
       - ocelotapi.gateway
       - catalog.api

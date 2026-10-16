@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EventBus.Messages\EventBus.Messages.csproj" />
+    <ProjectReference Include="..\Shop.ServiceDefaults\Shop.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
